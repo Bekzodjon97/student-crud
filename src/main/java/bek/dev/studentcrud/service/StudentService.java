@@ -38,148 +38,126 @@ import java.util.*;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class StudentService {
 
 
-    @Autowired StudentRepository studentRepository;
-    @Autowired AttachmentRepository attachmentRepository;
-    @Autowired VisitRepository visitRepository;
+    private final StudentRepository studentRepository;
 
-
-
-    private static final String IMAGES_DIRECTORY ="files/images";
-    private static final String RESUMES_DIRECTORY ="files/resumes";
-    private static final Integer DEFAULT_PAGE =0;
-    private static final Integer DEFAULT_LIMIT =10;
-
+    private static final String IMAGES_DIRECTORY = "files/images";
+    private static final Integer DEFAULT_PAGE = 0;
+    private static final Integer DEFAULT_LIMIT = 10;
 
 
     public Student createNewEmployee(String firstName,
-                                           String lastName,
-                                           LocalDate birthDate,
-                                           String group,
-                                           MultipartHttpServletRequest request) throws IOException {
+                                     String lastName,
+                                     LocalDate birthDate,
+                                     String group,
+                                     MultipartHttpServletRequest request) throws IOException {
         Iterator<String> fileNames = request.getFileNames();
         if (fileNames.hasNext()) {
             MultipartFile file = request.getFile(fileNames.next());
-            if (file!=null){
+            if (file != null) {
                 String originalFilename = file.getOriginalFilename();
                 long size = file.getSize();
                 String contentType = file.getContentType();
-                Attachment attachment=new Attachment();
+                Attachment attachment = new Attachment();
                 attachment.setSize(size);
                 attachment.setContentType(contentType);
                 attachment.setFileOriginalName(originalFilename);
-
                 assert originalFilename != null;
                 String[] split = originalFilename.split("\\.");
-                String name = UUID.randomUUID()+"."+split[split.length-1];
+                String name = UUID.randomUUID() + "." + split[split.length - 1];
                 attachment.setName(name);
-                Path path= Paths.get(IMAGES_DIRECTORY +"/"+name);
-                Files.copy(file.getInputStream(),path);
-
-                Student newStudent=new Student();
+                Path path = Paths.get(IMAGES_DIRECTORY + "/" + name);
+                Files.copy(file.getInputStream(), path);
+                Student newStudent = new Student();
                 newStudent.setGroupName(group);
                 newStudent.setFirstName(firstName);
                 newStudent.setLastName(lastName);
                 newStudent.setBirthDate(birthDate);
                 newStudent.setAttachment(attachment);
-
                 return studentRepository.save(newStudent);
-
             }
         }
-
-        Student newStudent=new Student();
+        Student newStudent = new Student();
         newStudent.setGroupName(group);
         newStudent.setFirstName(firstName);
         newStudent.setLastName(lastName);
         newStudent.setBirthDate(birthDate);
         return studentRepository.save(newStudent);
-
-
     }
 
 
-
-    public HttpEntity<Student> getStudentById(Long id){
+    public HttpEntity<Student> getStudentById(Long id) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
-        return optionalStudent.<HttpEntity<Student>>map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(409).body(null));
+        return optionalStudent.<HttpEntity<Student>>map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(400).body(null));
     }
-
     public HttpEntity<Result> deleteEmployee(Long id) {
         try {
             studentRepository.deleteById(id);
             return ResponseEntity.ok(new Result("Successfully deleted", true));
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(new Result("Not deleted", false));
         }
     }
-
     public void previewImage(Long id, HttpServletResponse response) throws IOException {
         Optional<Student> optionalStudent = studentRepository.findById(id);
-        if (optionalStudent.isPresent()){
+        if (optionalStudent.isPresent()) {
             if (optionalStudent.get().getAttachment() != null) {
                 Attachment attachment = optionalStudent.get().getAttachment();
-                response.setHeader("Content-Disposition", "inline; filename=\""+attachment.getFileOriginalName()+"\"");
+                response.setHeader("Content-Disposition", "inline; filename=\"" + attachment.getFileOriginalName() + "\"");
                 response.setContentType(attachment.getContentType());
-                FileInputStream inputStream = new FileInputStream(IMAGES_DIRECTORY +"/"+attachment.getName());
+                FileInputStream inputStream = new FileInputStream(IMAGES_DIRECTORY + "/" + attachment.getName());
                 FileCopyUtils.copy(inputStream, response.getOutputStream());
             }
         }
     }
-
     public void downloadImage(Long id, HttpServletResponse response) throws IOException {
         Optional<Student> optionalStudent = studentRepository.findById(id);
-        if (optionalStudent.isPresent()){
-            if (optionalStudent.get().getAttachment()!=null) {
+        if (optionalStudent.isPresent()) {
+            if (optionalStudent.get().getAttachment() != null) {
                 Attachment attachment = optionalStudent.get().getAttachment();
-                response.setHeader("Content-Disposition", "attachment; filename=\""+attachment.getFileOriginalName()+"\"");
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + attachment.getFileOriginalName() + "\"");
                 response.setContentType(attachment.getContentType());
-                FileInputStream inputStream = new FileInputStream(IMAGES_DIRECTORY +"/"+attachment.getName());
+                FileInputStream inputStream = new FileInputStream(IMAGES_DIRECTORY + "/" + attachment.getName());
                 FileCopyUtils.copy(inputStream, response.getOutputStream());
-
             }
         }
-    }
-
-
-    public List<Student> getAllStudent() {
-        return studentRepository.findAll();
     }
 
     public Page<Student> getAllStudentByPage(Integer pageId, Integer limit) {
-        if (pageId==null&&limit==null){
-            Pageable pageable= PageRequest.of(DEFAULT_PAGE, DEFAULT_LIMIT,  Sort.by("id"));
+        if (pageId == null && limit == null) {
+            Pageable pageable = PageRequest.of(DEFAULT_PAGE, DEFAULT_LIMIT, Sort.by("id"));
             return studentRepository.findAll(pageable);
-        }else if(pageId == null){
-            Pageable pageable= PageRequest.of(DEFAULT_PAGE,limit,  Sort.by("id"));
+        } else if (pageId == null) {
+            Pageable pageable = PageRequest.of(DEFAULT_PAGE, limit, Sort.by("id"));
             return studentRepository.findAll(pageable);
-        }else if(limit == null){
-            Pageable pageable= PageRequest.of(pageId, DEFAULT_LIMIT,  Sort.by("id"));
+        } else if (limit == null) {
+            Pageable pageable = PageRequest.of(pageId, DEFAULT_LIMIT, Sort.by("id"));
             return studentRepository.findAll(pageable);
         }
-        Pageable pageable= PageRequest.of(pageId,limit,  Sort.by("id"));
+        Pageable pageable = PageRequest.of(pageId, limit, Sort.by("id"));
         return studentRepository.findAll(pageable);
     }
 
     public HttpEntity<Result> updateStudent(Long id, String firstName, String lastName, LocalDate birthDate, String group, MultipartHttpServletRequest request) throws IOException {
         Optional<Student> optionalStudent = studentRepository.findById(id);
-        if (optionalStudent.isPresent()){
+        if (optionalStudent.isPresent()) {
             Iterator<String> fileNames = request.getFileNames();
             if (fileNames.hasNext()) {
                 MultipartFile file = request.getFile(fileNames.next());
-                if (file!=null) {
+                if (file != null) {
                     Student student = optionalStudent.get();
                     Attachment attachment = student.getAttachment();
                     attachment.setSize(file.getSize());
                     attachment.setContentType(file.getContentType());
                     attachment.setFileOriginalName(file.getOriginalFilename());
                     String oldFileName = attachment.getName();
-                    File oldFile=new File(IMAGES_DIRECTORY +"/"+oldFileName);
+                    File oldFile = new File(IMAGES_DIRECTORY + "/" + oldFileName);
                     String absolutePath = oldFile.getAbsolutePath();
-                    File oldFileAbsolutePath= new File(absolutePath);
+                    File oldFileAbsolutePath = new File(absolutePath);
                     boolean delete = oldFileAbsolutePath.delete();
                     assert file.getOriginalFilename() != null;
                     String[] split = file.getOriginalFilename().split("\\.");
@@ -200,82 +178,44 @@ public class StudentService {
             student.setLastName(lastName);
             student.setGroupName(group);
             student.setBirthDate(birthDate);
-             studentRepository.save(student);
+            studentRepository.save(student);
             return ResponseEntity.ok(new Result("Updated", true));
-        }else {
+        } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Result("Object not found", false));
         }
     }
 
 
-
-
-
-
-
-
-
     public void downloadResumePdf(Long id, HttpServletResponse response) throws IOException {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         if (optionalStudent.isPresent()) {
-
-
             String name = UUID.randomUUID() + ".pdf";
-
-
-
             try {
-
                 Student student = optionalStudent.get();
-
-
-
-
-
-
                 Document document = new Document();
                 PdfWriter.getInstance(document, response.getOutputStream());
                 response.setHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
-
-
                 document.open();
                 Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK);
-                Chunk chunk = new Chunk(student.getFirstName()+" "+student.getLastName(), font);
-
-
+                Chunk chunk = new Chunk(student.getFirstName() + " " + student.getLastName(), font);
                 document.add(chunk);
-
-
-                String content="Birt date: "+student.getBirthDate()+" \nAge: "+student.getAge();
-                Paragraph paragraph=new Paragraph(content);
-                document.add(paragraph);
-
-
                 Attachment attachment = student.getAttachment();
-                if (attachment!=null) {
+                if (attachment != null) {
                     String imageName = attachment.getName();
-                    File imageFile=new File(IMAGES_DIRECTORY +"/"+imageName);
+                    File imageFile = new File(IMAGES_DIRECTORY + "/" + imageName);
                     Image img = Image.getInstance(imageFile.getAbsolutePath());
                     img.setAlt("Student Image");
-                    img.setAbsolutePosition(200,50);
+                    img.scaleAbsolute(200f, 200f);
+                    img.setAbsolutePosition(200, 50);
                     document.add(img);
-
                 }
-
-
-
-
-
-
+                String content = "Birt date: " + student.getBirthDate() + " \nAge: " + student.getAge();
+                Paragraph paragraph = new Paragraph(content);
+                document.add(paragraph);
                 document.close();
-
-
             } catch (DocumentException | FileNotFoundException e) {
                 e.printStackTrace();
             }
-
-
-
         }
     }
 

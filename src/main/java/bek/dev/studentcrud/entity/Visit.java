@@ -28,7 +28,6 @@ public class Visit {
 
     private Date backTime;
 
-    @JsonIgnore
     @ManyToOne(optional = false)
     private Student student;
 

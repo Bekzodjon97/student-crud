@@ -14,59 +14,51 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class VisitService {
 
+    private final VisitRepository visitRepository;
+    private final StudentRepository studentRepository;
 
+    private static final Integer SET_HOUR = 9;
+    private static final Integer SET_MINUTE = 0;
 
-    @Autowired
-    VisitRepository visitRepository;
-    @Autowired
-    StudentRepository studentRepository;
-
-    private static final Integer SET_HOUR =9;
-    private static final Integer SET_MINUTE =0;
-
-
-
-    public List<Visit> getAllVisits() {
-        return visitRepository.findAll();
-    }
 
     public Result comeStudent(Long id) {
         boolean existsByComeTimeAndStudentId = visitRepository.existsByComeTimeAndStudentId(new Date(), id);
         if (!existsByComeTimeAndStudentId) {
             Optional<Student> optionalStudent = studentRepository.findById(id);
             if (optionalStudent.isPresent()) {
-                Visit visit=new Visit();
+                Visit visit = new Visit();
                 visit.setComeTime(new Date());
                 visit.setStudent(optionalStudent.get());
                 visitRepository.save(visit);
                 return new Result("Visit saved", true);
             }
-            return new Result("Student not found" ,false);
+            return new Result("Student not found", false);
         }
-        return new Result("Visit already exist" ,false);
+        return new Result("Visit already exist", false);
     }
 
     public Result deleteVisit(Long id) {
         try {
-        visitRepository.deleteById(id);
-        return new Result("Visit deleted", true);
-        }catch (Exception e){
+            visitRepository.deleteById(id);
+            return new Result("Visit deleted", true);
+        } catch (Exception e) {
             e.printStackTrace();
-            return new Result("Error" ,false);
+            return new Result("Error", false);
         }
     }
 
     public List<Visit> getLateAllStudentInThisWeek() {
-        return visitRepository.findAllByHourAndMinute(SET_HOUR*60+ SET_MINUTE);
+        return visitRepository.findAllByHourAndMinute(SET_HOUR * 60 + SET_MINUTE);
     }
 
     public List<Visit> getVisitByMonth(Integer monthNumber, Integer yearNumber, Long id) {
-        return visitRepository.findAllByMonth(monthNumber,yearNumber, id);
+        return visitRepository.findAllByMonth(monthNumber, yearNumber, id);
     }
 
-    public Result backStudent( Long id) {
+    public Result backStudent(Long id) {
         Optional<Visit> optionalVisit = visitRepository.findById(id);
         if (optionalVisit.isPresent()) {
             Visit visit = optionalVisit.get();
