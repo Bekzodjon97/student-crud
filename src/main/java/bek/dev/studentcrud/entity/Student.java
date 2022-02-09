@@ -44,6 +44,10 @@ public class Student{
     @OneToOne(cascade = CascadeType.ALL)
     private Attachment attachment;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    private List<Visit> visit;
+
 
     public Integer getAge() {
         if (this.birthDate==null)

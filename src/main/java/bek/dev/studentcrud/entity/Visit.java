@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
@@ -28,6 +30,7 @@ public class Visit {
 
     private Date backTime;
 
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne(optional = false)
     private Student student;
 
