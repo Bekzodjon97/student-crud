@@ -54,7 +54,7 @@ public class StudentController {
 
     @DeleteMapping("/{id}")
     public HttpEntity<Result> delete(@PathVariable Long id) throws Exception {
-        return studentService.deleteEmployee(id);
+        return studentService.deleteStudent(id);
 
     }
 

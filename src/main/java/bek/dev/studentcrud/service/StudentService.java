@@ -93,7 +93,7 @@ public class StudentService {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         return optionalStudent.<HttpEntity<Student>>map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(400).body(null));
     }
-    public HttpEntity<Result> deleteEmployee(Long id) {
+    public HttpEntity<Result> deleteStudent(Long id) {
         try {
             studentRepository.deleteById(id);
             return ResponseEntity.ok(new Result("Successfully deleted", true));
