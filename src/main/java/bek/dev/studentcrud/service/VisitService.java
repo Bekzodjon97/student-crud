@@ -7,6 +7,9 @@ import bek.dev.studentcrud.repository.StudentRepository;
 import bek.dev.studentcrud.repository.VisitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -24,7 +27,7 @@ public class VisitService {
     private static final Integer SET_MINUTE = 0;
 
 
-    public Result comeStudent(Long id) {
+    public HttpEntity<Result> comeStudent(Long id) {
         boolean existsByComeTimeAndStudentId = visitRepository.existsByComeTimeAndStudentId(new Date(), id);
         if (!existsByComeTimeAndStudentId) {
             Optional<Student> optionalStudent = studentRepository.findById(id);
@@ -33,20 +36,20 @@ public class VisitService {
                 visit.setComeTime(new Date());
                 visit.setStudent(optionalStudent.get());
                 visitRepository.save(visit);
-                return new Result("Visit saved", true);
+                return ResponseEntity.status(HttpStatus.CREATED).body(new Result("Visit saved", true));
             }
-            return new Result("Student not found", false);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Student not found", false));
         }
-        return new Result("Visit already exist", false);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Visit already exist", false));
     }
 
-    public Result deleteVisit(Long id) {
+    public HttpEntity<Result> deleteVisit(Long id) {
         try {
             visitRepository.deleteById(id);
-            return new Result("Visit deleted", true);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Result("Visit deleted", true));
         } catch (Exception e) {
             e.printStackTrace();
-            return new Result("Error", false);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Error", false));
         }
     }
 
@@ -58,14 +61,14 @@ public class VisitService {
         return visitRepository.findAllByMonth(monthNumber, yearNumber, id);
     }
 
-    public Result backStudent(Long id) {
+    public HttpEntity<Result> backStudent(Long id) {
         Optional<Visit> optionalVisit = visitRepository.findById(id);
         if (optionalVisit.isPresent()) {
             Visit visit = optionalVisit.get();
             visit.setBackTime(new Date());
             visitRepository.save(visit);
-            return new Result("Visit updated", true);
+            return ResponseEntity.ok(new Result("Visit updated", true));
         }
-        return new Result("Visit not found", false);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Visit not found", false));
     }
 }

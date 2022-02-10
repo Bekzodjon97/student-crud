@@ -49,7 +49,7 @@ public class StudentService {
     private static final Integer DEFAULT_LIMIT = 10;
 
 
-    public Student createNewEmployee(String firstName,
+    public HttpEntity<?> createNewEmployee(String firstName,
                                      String lastName,
                                      LocalDate birthDate,
                                      String group,
@@ -77,7 +77,8 @@ public class StudentService {
                 newStudent.setLastName(lastName);
                 newStudent.setBirthDate(birthDate);
                 newStudent.setAttachment(attachment);
-                return studentRepository.save(newStudent);
+                Student savedStudent = studentRepository.save(newStudent);
+                return ResponseEntity.status(HttpStatus.CREATED).body(savedStudent);
             }
         }
         Student newStudent = new Student();
@@ -85,11 +86,12 @@ public class StudentService {
         newStudent.setFirstName(firstName);
         newStudent.setLastName(lastName);
         newStudent.setBirthDate(birthDate);
-        return studentRepository.save(newStudent);
+        Student savedStudent = studentRepository.save(newStudent);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedStudent);
     }
 
 
-    public HttpEntity<Student> getStudentById(Long id) {
+    public HttpEntity<?> getStudentById(Long id) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         return optionalStudent.<HttpEntity<Student>>map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(400).body(null));
     }
@@ -99,7 +101,7 @@ public class StudentService {
             return ResponseEntity.ok(new Result("Successfully deleted", true));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.ok(new Result("Not deleted", false));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Not deleted", false));
         }
     }
     public void previewImage(Long id, HttpServletResponse response) throws IOException {
@@ -181,7 +183,7 @@ public class StudentService {
             studentRepository.save(student);
             return ResponseEntity.ok(new Result("Updated", true));
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Result("Object not found", false));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Object not found", false));
         }
     }
 

@@ -5,6 +5,7 @@ import bek.dev.studentcrud.payload.Result;
 import bek.dev.studentcrud.service.VisitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -26,17 +27,17 @@ public class VisitController {
     }
 
     @PostMapping("/{id}")
-    public Result comeStudent(@PathVariable Long id) throws IOException {
+    public HttpEntity<Result> comeStudent(@PathVariable Long id) throws IOException {
         return visitService.comeStudent(id);
     }
 
     @PutMapping("/{id}")
-    public Result backStudent( @PathVariable Long id) throws IOException {
+    public HttpEntity<Result> backStudent( @PathVariable Long id) throws IOException {
         return visitService.backStudent( id);
     }
 
     @DeleteMapping("/{id}")
-    public Result delete(@PathVariable Long id) throws Exception {
+    public HttpEntity<Result> delete(@PathVariable Long id) throws Exception {
         return visitService.deleteVisit(id);
     }
 

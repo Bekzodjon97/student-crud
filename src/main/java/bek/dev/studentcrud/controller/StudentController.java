@@ -28,7 +28,7 @@ public class StudentController {
 
 
     @PostMapping
-    public Student createNewEmployee(
+    public HttpEntity<?> createNewEmployee(
             @RequestParam(value = "firstName", required = false) String firstName,
             @RequestParam(value = "lastName", required = false) String lastName,
             @RequestParam(value = "birthDate", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)  LocalDate birthDate,
@@ -38,7 +38,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    public HttpEntity<Student> getStudentByID(@PathVariable Long id){
+    public HttpEntity<?> getStudentByID(@PathVariable Long id){
         return studentService.getStudentById(id);
     }
 
