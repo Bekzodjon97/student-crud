@@ -10,6 +10,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.time.LocalDate;
 
@@ -29,10 +30,10 @@ public class StudentController {
 
     @PostMapping
     public HttpEntity<?> createNewEmployee(
-            @RequestParam(value = "firstName", required = false) String firstName,
-            @RequestParam(value = "lastName", required = false) String lastName,
+            @RequestParam(value = "firstName", required = false)@NotBlank(message = "Firstname not be empty") String firstName,
+            @RequestParam(value = "lastName", required = false)@NotBlank(message = "Lasstname not be empty") String lastName,
             @RequestParam(value = "birthDate", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)  LocalDate birthDate,
-            @RequestParam(value = "group", required = false) String group,
+            @RequestParam(value = "group", required = false)@NotBlank(message = "Group not be empty") String group,
             MultipartHttpServletRequest request) throws IOException {
         return studentService.createNewEmployee(firstName, lastName,birthDate, group,request);
     }
@@ -73,5 +74,10 @@ public class StudentController {
     @GetMapping("/resume/{id}")
     public void downloadResumePdf(@PathVariable Long id,HttpServletResponse response) throws IOException {
         studentService.downloadResumePdf(id, response);
+    }
+
+    @GetMapping("/excell")
+    public void downloadAllStudentsExcell(HttpServletResponse response) throws IOException {
+        studentService.downloadAllStudentsExcell(response);
     }
 }

@@ -13,6 +13,12 @@ import com.itextpdf.layout.element.Text;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.io.IOUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,9 +33,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.swing.text.StyleConstants;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -220,5 +228,67 @@ public class StudentService {
             }
         }
     }
+
+    public void downloadAllStudentsExcell(HttpServletResponse response) {
+        String name="students";
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + name + "\".xlsx");
+        response.setContentType("application/octet-stream");
+        try {
+            List<Student> studentList = studentRepository.findAll();
+
+            XSSFWorkbook xssfWorkbook=new XSSFWorkbook();
+            XSSFSheet sheet=xssfWorkbook.createSheet("Students");
+
+            CellStyle cellStyle=xssfWorkbook.createCellStyle();
+            XSSFFont font=xssfWorkbook.createFont();
+            font.setBold(true);
+            font.setFontHeight(16);
+            cellStyle.setFont(font);
+
+
+            XSSFRow mainRow=sheet.createRow(0);
+
+            XSSFCell cell1 = mainRow.createCell(0, CellType.NUMERIC);
+            cell1.setCellStyle(cellStyle);
+            cell1.setCellValue("Id");
+
+            XSSFCell cell2 = mainRow.createCell(1, CellType.STRING);
+            cell2.setCellStyle(cellStyle);
+            cell2.setCellValue("Birth date");
+
+            XSSFCell cell3 = mainRow.createCell(2, CellType.STRING);
+            cell3.setCellStyle(cellStyle);
+            cell3.setCellValue("First name");
+
+            XSSFCell cell4 = mainRow.createCell(3, CellType.STRING);
+            cell4.setCellStyle(cellStyle);
+            cell4.setCellValue("Last name");
+
+            XSSFCell cell5 = mainRow.createCell(4, CellType.STRING);
+            cell5.setCellStyle(cellStyle);
+            cell5.setCellValue("Group");
+
+
+            for (int i = 0; i < studentList.size(); i++) {
+                XSSFRow row=sheet.createRow(i+1);
+                    row.createCell(0, CellType.NUMERIC).setCellValue(studentList.get(i).getId());
+                    row.createCell(1,CellType.STRING).setCellValue(studentList.get(i).getBirthDate().toString());
+                    row.createCell(2, CellType.STRING).setCellValue(studentList.get(i).getFirstName());
+                    row.createCell(3, CellType.STRING).setCellValue(studentList.get(i).getLastName());
+                    row.createCell(4, CellType.STRING).setCellValue(studentList.get(i).getGroupName());
+
+            }
+
+
+            ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
+            xssfWorkbook.write(byteArrayOutputStream);
+            ByteArrayInputStream byteArrayInputStream=new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            IOUtils.copy(byteArrayInputStream, response.getOutputStream());
+            xssfWorkbook.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }
