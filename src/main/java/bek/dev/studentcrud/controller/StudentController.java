@@ -80,4 +80,9 @@ public class StudentController {
     public void downloadAllStudentsExcell(HttpServletResponse response) throws IOException {
         studentService.downloadAllStudentsExcell(response);
     }
+
+    @PostMapping("/write")
+    public HttpEntity<Result> writeDbFromExcel(MultipartHttpServletRequest request) throws IOException {
+        return studentService.writeDbFromExcel(request);
+    }
 }

@@ -11,13 +11,15 @@ import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.text.*;
+import com.itextpdf.text.Font;
 import com.itextpdf.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -291,4 +293,30 @@ public class StudentService {
     }
 
 
+    public HttpEntity<Result> writeDbFromExcel(MultipartHttpServletRequest request) throws IOException {
+
+        Iterator<String> fileNames = request.getFileNames();
+        if (fileNames.hasNext()) {
+            MultipartFile file = request.getFile(fileNames.next());
+            if (file != null) {
+                InputStream inputStream = file.getInputStream();
+                XSSFWorkbook workbook=new XSSFWorkbook(inputStream);
+                XSSFSheet sheet=workbook.getSheet("Students");
+                for (int i = 0; i < sheet.getPhysicalNumberOfRows(); i++) {
+                    if (i>0){
+                        XSSFRow row = sheet.getRow(i);
+                        Student student=new Student();
+                        student.setId((long) row.getCell(0).getNumericCellValue());
+                        student.setBirthDate(LocalDate.parse(row.getCell(1).getStringCellValue()));
+                        student.setFirstName(row.getCell(2).getStringCellValue());
+                        student.setLastName(row.getCell(3).getStringCellValue());
+                        student.setGroupName(row.getCell(4).getStringCellValue());
+                        studentRepository.save(student);
+                    }
+                }
+            }
+            return ResponseEntity.ok(new Result("saved", true));
+        }
+        return ResponseEntity.ok(new Result("File is not found", true));
+    }
 }
