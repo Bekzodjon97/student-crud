@@ -64,10 +64,10 @@ public class StudentService {
 
 
     public HttpEntity<?> createNewEmployee(String firstName,
-                                     String lastName,
-                                     LocalDate birthDate,
-                                     String group,
-                                     MultipartHttpServletRequest request) throws IOException {
+                                           String lastName,
+                                           LocalDate birthDate,
+                                           String group,
+                                           MultipartHttpServletRequest request) throws IOException {
         Iterator<String> fileNames = request.getFileNames();
         if (fileNames.hasNext()) {
             MultipartFile file = request.getFile(fileNames.next());
@@ -109,6 +109,7 @@ public class StudentService {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         return optionalStudent.<HttpEntity<Student>>map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(400).body(null));
     }
+
     public HttpEntity<Result> deleteStudent(Long id) {
         try {
             studentRepository.deleteById(id);
@@ -118,6 +119,7 @@ public class StudentService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Not deleted", false));
         }
     }
+
     public void previewImage(Long id, HttpServletResponse response) throws IOException {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         if (optionalStudent.isPresent()) {
@@ -130,6 +132,7 @@ public class StudentService {
             }
         }
     }
+
     public void downloadImage(Long id, HttpServletResponse response) throws IOException {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         if (optionalStudent.isPresent()) {
@@ -222,7 +225,7 @@ public class StudentService {
                     img.setAlt("Student Image");
                     img.scaleAbsolute(90f, 90f);
 
-                    img.setAbsolutePosition(350,725);
+                    img.setAbsolutePosition(350, 725);
                     document.add(img);
                 }
                 document.add(chunk);
@@ -244,8 +247,8 @@ public class StudentService {
                 table.addCell("Toshkent moliya instituti");
                 table.setHorizontalAlignment(200);
                 table.setTotalWidth(500);
-                PdfContentByte canvas=writer.getDirectContent();
-                table.writeSelectedRows(0,-1,30,700,canvas);
+                PdfContentByte canvas = writer.getDirectContent();
+                table.writeSelectedRows(0, -1, 30, 700, canvas);
 
 
                 document.setHtmlStyleClass("background-color: green");
@@ -257,23 +260,22 @@ public class StudentService {
     }
 
     public void downloadAllStudentsExcell(HttpServletResponse response) {
-        String name="students";
+        String name = "students";
         response.setHeader("Content-Disposition", "attachment; filename=\"" + name + "\".xlsx");
         response.setContentType("application/octet-stream");
         try {
             List<Student> studentList = studentRepository.findAll();
 
-            XSSFWorkbook xssfWorkbook=new XSSFWorkbook();
-            XSSFSheet sheet=xssfWorkbook.createSheet("Students");
+            XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
+            XSSFSheet sheet = xssfWorkbook.createSheet("Students");
 
-            CellStyle cellStyle=xssfWorkbook.createCellStyle();
-            XSSFFont font=xssfWorkbook.createFont();
+            CellStyle cellStyle = xssfWorkbook.createCellStyle();
+            XSSFFont font = xssfWorkbook.createFont();
             font.setBold(true);
             font.setFontHeight(16);
             cellStyle.setFont(font);
 
-
-            XSSFRow mainRow=sheet.createRow(0);
+            XSSFRow mainRow = sheet.createRow(0);
 
             XSSFCell cell1 = mainRow.createCell(0, CellType.NUMERIC);
             cell1.setCellStyle(cellStyle);
@@ -297,19 +299,17 @@ public class StudentService {
 
 
             for (int i = 0; i < studentList.size(); i++) {
-                XSSFRow row=sheet.createRow(i+1);
-                    row.createCell(0, CellType.NUMERIC).setCellValue(studentList.get(i).getId());
-                    row.createCell(1,CellType.STRING).setCellValue(studentList.get(i).getBirthDate().toString());
-                    row.createCell(2, CellType.STRING).setCellValue(studentList.get(i).getFirstName());
-                    row.createCell(3, CellType.STRING).setCellValue(studentList.get(i).getLastName());
-                    row.createCell(4, CellType.STRING).setCellValue(studentList.get(i).getGroupName());
+                XSSFRow row = sheet.createRow(i + 1);
+                row.createCell(0, CellType.NUMERIC).setCellValue(studentList.get(i).getId());
+                row.createCell(1, CellType.STRING).setCellValue(studentList.get(i).getBirthDate().toString());
+                row.createCell(2, CellType.STRING).setCellValue(studentList.get(i).getFirstName());
+                row.createCell(3, CellType.STRING).setCellValue(studentList.get(i).getLastName());
+                row.createCell(4, CellType.STRING).setCellValue(studentList.get(i).getGroupName());
 
             }
-
-
-            ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             xssfWorkbook.write(byteArrayOutputStream);
-            ByteArrayInputStream byteArrayInputStream=new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
             IOUtils.copy(byteArrayInputStream, response.getOutputStream());
             xssfWorkbook.close();
         } catch (IOException e) {
@@ -324,13 +324,20 @@ public class StudentService {
         if (fileNames.hasNext()) {
             MultipartFile file = request.getFile(fileNames.next());
             if (file != null) {
+                Workbook workbook = null;
                 InputStream inputStream = file.getInputStream();
-                XSSFWorkbook workbook=new XSSFWorkbook(inputStream);
-                XSSFSheet sheet=workbook.getSheet("Students");
+                if (Objects.requireNonNull(file.getOriginalFilename()).endsWith(".xlsx")) {
+                    workbook = new XSSFWorkbook(inputStream);
+                } else if (file.getOriginalFilename().endsWith(".xls")) {
+                    workbook = new HSSFWorkbook(inputStream);
+                }else {
+                    return ResponseEntity.status(409).body(new Result("This file is not excell", false));
+                }
+                Sheet sheet = workbook.getSheet("Students");
                 for (int i = 0; i < sheet.getPhysicalNumberOfRows(); i++) {
-                    if (i>0){
-                        XSSFRow row = sheet.getRow(i);
-                        Student student=new Student();
+                    if (i > 0) {
+                        Row row = sheet.getRow(i);
+                        Student student = new Student();
                         student.setId((long) row.getCell(0).getNumericCellValue());
                         student.setBirthDate(LocalDate.parse(row.getCell(1).getStringCellValue()));
                         student.setFirstName(row.getCell(2).getStringCellValue());
@@ -342,6 +349,6 @@ public class StudentService {
             }
             return ResponseEntity.ok(new Result("Saved", true));
         }
-        return ResponseEntity.ok(new Result("File is not found", true));
+        return ResponseEntity.status(400).body(new Result("File is not found", true));
     }
 }

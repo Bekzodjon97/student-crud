@@ -8,6 +8,9 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/student")
@@ -31,56 +35,73 @@ public class StudentController {
 
 
     @Operation(summary = "Get list of Students in the System ", tags = "Get Students")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "All students",response = Student.class),
+            @ApiResponse(code = 400, message = "Page not found") })
     @GetMapping
-    public Page<Student> getAllStudentByPage(@RequestParam("page") Integer  page, @RequestParam("limit") Integer limit){
+    public Page<Student> getAllStudentByPage(@Parameter(description = "page of students")@RequestParam("page") Integer  page,
+                                             @Parameter(description = "limit of students")@RequestParam("limit") Integer limit){
         return studentService.getAllStudentByPage(page, limit);
     }
 
 
     @PostMapping
     @Operation(summary = "Create new student",method = "POST", tags = "Create Employee")
+    @ApiResponses(value = {
+            @ApiResponse(code = 203, message = "Create student", response = Student.class),
+            @ApiResponse(code = 400, message = "Bad request"),
+            @ApiResponse(code = 405, message = "method not found")})
     public HttpEntity<?> createNewEmployee(
-            @RequestParam(value = "firstName", required = false)@NotBlank(message = "Firstname not be empty") String firstName,
-            @RequestParam(value = "lastName", required = false)@NotBlank(message = "Lasstname not be empty") String lastName,
-            @RequestParam(value = "birthDate", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)  LocalDate birthDate,
-            @RequestParam(value = "group", required = false)@NotBlank(message = "Group not be empty") String group,
+            @Parameter(description = "First name  of students")@RequestParam(value = "firstName", required = false)@NotBlank(message = "Firstname not be empty") String firstName,
+            @Parameter(description = "Last name of students")@RequestParam(value = "lastName", required = false)@NotBlank(message = "Lasstname not be empty") String lastName,
+            @Parameter(description = "Birth date of students")@RequestParam(value = "birthDate", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)  LocalDate birthDate,
+            @Parameter(description = "Group name of students")@RequestParam(value = "group", required = false)@NotBlank(message = "Group not be empty") String group,
             MultipartHttpServletRequest request) throws IOException {
         return studentService.createNewEmployee(firstName, lastName,birthDate, group,request);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get student by id in the System ", tags = "Get Students By Id")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Get by id student",response = Student.class),
+            @ApiResponse(code = 400, message = "Student not found by id")})
     public HttpEntity<?> getStudentByID(@PathVariable Long id){
         return studentService.getStudentById(id);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update Student in the System ", tags = "Update Student")
-    public HttpEntity<Result> updateStudent(@PathVariable Long id,
-                                     @RequestParam(value = "firstName", required = false) String firstName,
-                                     @RequestParam(value = "lastName", required = false) String lastName,
-                                     @RequestParam(value = "birthDate", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)  LocalDate birthDate,
-                                     @RequestParam(value = "group", required = false) String group,
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Updated student", response = Student.class),
+            @ApiResponse(code = 400, message = "Student not found by id")})
+    public HttpEntity<Result> updateStudent(@Parameter(description = "id of student that is updating ")@PathVariable Long id,
+                                            @Parameter(description = "First name  of students")@RequestParam(value = "firstName", required = false) String firstName,
+                                            @Parameter(description = "Last name of students")@RequestParam(value = "lastName", required = false) String lastName,
+                                            @Parameter(description = "Birth date of students")@RequestParam(value = "birthDate", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)  LocalDate birthDate,
+                                            @Parameter(description = "Group name of students")@RequestParam(value = "group", required = false) String group,
                                      MultipartHttpServletRequest request) throws IOException {
         return studentService.updateStudent(id, firstName, lastName,birthDate, group, request);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete student in the System ", tags = "Delete Student")
-    public HttpEntity<Result> delete(@PathVariable Long id) throws Exception {
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully deleted"),
+            @ApiResponse(code = 400, message = "Not deleted")})
+    public HttpEntity<Result> delete(@Parameter(description = "Id  of students")@PathVariable Long id) throws Exception {
         return studentService.deleteStudent(id);
 
     }
 
     @GetMapping("/preview/{id}")
     @Operation(summary = "Preview image of student  ", tags = "Preview Image")
-    public void previewFile(@PathVariable Long id,HttpServletResponse response) throws IOException {
+    public void previewFile(@Parameter(description = "Id  of students")@PathVariable Long id,HttpServletResponse response) throws IOException {
        studentService.previewImage(id, response);
     }
 
     @GetMapping("/download/{id}")
     @Operation(summary = "Download image of student", tags = "Download Image")
-    public void downloadFile(@PathVariable Long id,HttpServletResponse response) throws IOException {
+    public void downloadFile(@Parameter(description = "Id  of students")@PathVariable Long id,HttpServletResponse response) throws IOException {
        studentService.downloadImage(id, response);
     }
 
@@ -88,7 +109,7 @@ public class StudentController {
 
     @GetMapping("/resume/{id}")
     @Operation(summary = "Download resume of student ", tags = "Download Resume")
-    public void downloadResumePdf(@PathVariable Long id,HttpServletResponse response) throws IOException {
+    public void downloadResumePdf(@Parameter(description = "Id  of students")@PathVariable Long id,HttpServletResponse response) throws IOException {
         studentService.downloadResumePdf(id, response);
     }
 
@@ -100,6 +121,10 @@ public class StudentController {
 
     @PostMapping("/write")
     @Operation(summary = "import excel file and write database ", tags = "Import Excel")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully deleted", response = Result.class),
+            @ApiResponse(code = 409, message = "File is not excel",response = Result.class),
+            @ApiResponse(code = 400, message = "File not found",response = Result.class)})
     public HttpEntity<Result> writeDbFromExcel(MultipartHttpServletRequest request) throws IOException {
         return studentService.writeDbFromExcel(request);
     }
