@@ -315,7 +315,7 @@ public class StudentService {
                     }
                 }
             }
-            return ResponseEntity.ok(new Result("saved", true));
+            return ResponseEntity.ok(new Result("Saved", true));
         }
         return ResponseEntity.ok(new Result("File is not found", true));
     }
