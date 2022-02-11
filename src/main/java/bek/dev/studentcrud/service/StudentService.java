@@ -12,6 +12,9 @@ import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.text.*;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
@@ -46,6 +49,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -205,25 +209,46 @@ public class StudentService {
             try {
                 Student student = optionalStudent.get();
                 Document document = new Document();
-                PdfWriter.getInstance(document, response.getOutputStream());
+                PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
                 response.setHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
                 document.open();
                 Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK);
                 Chunk chunk = new Chunk(student.getFirstName() + " " + student.getLastName(), font);
-                document.add(chunk);
                 Attachment attachment = student.getAttachment();
                 if (attachment != null) {
                     String imageName = attachment.getName();
                     File imageFile = new File(IMAGES_DIRECTORY + "/" + imageName);
                     Image img = Image.getInstance(imageFile.getAbsolutePath());
                     img.setAlt("Student Image");
-                    img.scaleAbsolute(200f, 200f);
-                    img.setAbsolutePosition(200, 50);
+                    img.scaleAbsolute(90f, 90f);
+
+                    img.setAbsolutePosition(350,725);
                     document.add(img);
                 }
+                document.add(chunk);
                 String content = "Birt date: " + student.getBirthDate() + " \nAge: " + student.getAge();
                 Paragraph paragraph = new Paragraph(content);
                 document.add(paragraph);
+
+                PdfPTable table = new PdfPTable(3);
+                Stream.of("Malumoti", "Manzili", "OTM nomi")
+                        .forEach(columnTitle -> {
+                            PdfPCell header = new PdfPCell();
+                            header.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                            header.setBorderWidth(2);
+                            header.setPhrase(new Phrase(columnTitle));
+                            table.addCell(header);
+                        });
+                table.addCell("Oliy");
+                table.addCell("Farg'ona");
+                table.addCell("Toshkent moliya instituti");
+                table.setHorizontalAlignment(200);
+                table.setTotalWidth(500);
+                PdfContentByte canvas=writer.getDirectContent();
+                table.writeSelectedRows(0,-1,30,700,canvas);
+
+
+                document.setHtmlStyleClass("background-color: green");
                 document.close();
             } catch (DocumentException | FileNotFoundException e) {
                 e.printStackTrace();
