@@ -116,7 +116,7 @@ public class StudentController {
     @GetMapping("/excell")
     @Operation(summary = "Download all student in excel format ", tags = "Download Excel")
     public void downloadAllStudentsExcell(HttpServletResponse response) throws IOException {
-        studentService.downloadAllStudentsExcell(response);
+        studentService.downloadAllStudentsExcel(response);
     }
 
     @PostMapping("/write")

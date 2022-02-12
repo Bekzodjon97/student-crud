@@ -1,11 +1,13 @@
 package bek.dev.studentcrud.service;
 
+import bek.dev.studentcrud.config.MQConfig;
 import bek.dev.studentcrud.entity.Student;
 import bek.dev.studentcrud.entity.Visit;
 import bek.dev.studentcrud.payload.Result;
 import bek.dev.studentcrud.repository.StudentRepository;
 import bek.dev.studentcrud.repository.VisitRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,8 @@ public class VisitService {
 
     private final VisitRepository visitRepository;
     private final StudentRepository studentRepository;
+    private final RabbitTemplate rabbitTemplate;
+
 
     private static final Integer SET_HOUR = 9;
     private static final Integer SET_MINUTE = 0;
@@ -32,10 +36,7 @@ public class VisitService {
         if (!existsByComeTimeAndStudentId) {
             Optional<Student> optionalStudent = studentRepository.findById(id);
             if (optionalStudent.isPresent()) {
-                Visit visit = new Visit();
-                visit.setComeTime(new Date());
-                visit.setStudent(optionalStudent.get());
-                visitRepository.save(visit);
+                rabbitTemplate.convertAndSend(MQConfig.EXCHANGE, MQConfig.ROUTING_KEY, optionalStudent.get().getId());
                 return ResponseEntity.status(HttpStatus.CREATED).body(new Result("Visit saved", true));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Student not found", false));

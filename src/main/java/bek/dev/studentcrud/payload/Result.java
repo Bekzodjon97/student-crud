@@ -8,4 +8,5 @@ import lombok.*;
 public class Result {
     private String message;
     private boolean success;
+
 }

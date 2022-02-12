@@ -259,7 +259,7 @@ public class StudentService {
         }
     }
 
-    public void downloadAllStudentsExcell(HttpServletResponse response) {
+    public void downloadAllStudentsExcel(HttpServletResponse response) {
         String name = "students";
         response.setHeader("Content-Disposition", "attachment; filename=\"" + name + "\".xlsx");
         response.setContentType("application/octet-stream");
