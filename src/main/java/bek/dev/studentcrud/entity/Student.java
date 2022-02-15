@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -65,5 +66,19 @@ public class Student{
         if (this.birthDate==null)
             return 0;
         return Period.between(birthDate, LocalDate.now()).getYears();
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id=" + id +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", birthDate=" + birthDate +
+                ", groupName='" + groupName + '\'' +
+                ", age=" + age +
+                ", attachment=" + attachment +
+                ", visit=" + visit +
+                '}';
     }
 }

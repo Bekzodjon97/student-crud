@@ -6,7 +6,10 @@ import bek.dev.studentcrud.entity.Visit;
 import bek.dev.studentcrud.payload.Result;
 import bek.dev.studentcrud.repository.StudentRepository;
 import bek.dev.studentcrud.repository.VisitRepository;
+import com.google.gson.Gson;
+import io.swagger.v3.core.util.Json;
 import lombok.RequiredArgsConstructor;
+import netscape.javascript.JSObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -36,8 +39,15 @@ public class VisitService {
         if (!existsByComeTimeAndStudentId) {
             Optional<Student> optionalStudent = studentRepository.findById(id);
             if (optionalStudent.isPresent()) {
-                rabbitTemplate.convertAndSend(MQConfig.EXCHANGE, MQConfig.ROUTING_KEY, optionalStudent.get().getId());
-                return ResponseEntity.status(HttpStatus.CREATED).body(new Result("Visit saved", true));
+                Student student = optionalStudent.get();
+                Gson gson=new Gson();
+                System.out.println("salom");
+                System.out.println(student);
+                System.out.println(student);
+                String studentString=gson.toJson(student);
+                System.out.println(studentString);
+                rabbitTemplate.convertAndSend(MQConfig.DIRECT_EXCHANGE, MQConfig.VISIT_COME_KEY,studentString);
+                return ResponseEntity.status(HttpStatus.CREATED).body(new Result("Visit send for saving", true));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Student not found", false));
         }
@@ -66,8 +76,9 @@ public class VisitService {
         Optional<Visit> optionalVisit = visitRepository.findById(id);
         if (optionalVisit.isPresent()) {
             Visit visit = optionalVisit.get();
-            visit.setBackTime(new Date());
-            visitRepository.save(visit);
+            Gson gson=new Gson();
+            String visitString=gson.toJson(visit);
+            rabbitTemplate.convertAndSend(MQConfig.DIRECT_EXCHANGE, MQConfig.VISIT_BACK_KEY,visitString);
             return ResponseEntity.ok(new Result("Visit updated", true));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Result("Visit not found", false));

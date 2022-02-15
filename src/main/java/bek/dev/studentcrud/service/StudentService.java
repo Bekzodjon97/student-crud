@@ -67,10 +67,9 @@ public class StudentService {
                                            String lastName,
                                            LocalDate birthDate,
                                            String group,
-                                           MultipartHttpServletRequest request) throws IOException {
-        Iterator<String> fileNames = request.getFileNames();
-        if (fileNames.hasNext()) {
-            MultipartFile file = request.getFile(fileNames.next());
+                                           MultipartFile file) throws IOException {
+
+
             if (file != null) {
                 String originalFilename = file.getOriginalFilename();
                 long size = file.getSize();
@@ -94,7 +93,7 @@ public class StudentService {
                 Student savedStudent = studentRepository.save(newStudent);
                 return ResponseEntity.status(HttpStatus.CREATED).body(savedStudent);
             }
-        }
+
         Student newStudent = new Student();
         newStudent.setGroupName(group);
         newStudent.setFirstName(firstName);
@@ -229,7 +228,7 @@ public class StudentService {
                     document.add(img);
                 }
                 document.add(chunk);
-                String content = "Birt date: " + student.getBirthDate() + " \nAge: " + student.getAge();
+                String content = "Birth date: " + student.getBirthDate() + " \nAge: " + student.getAge();
                 Paragraph paragraph = new Paragraph(content);
                 document.add(paragraph);
 
@@ -245,6 +244,11 @@ public class StudentService {
                 table.addCell("Oliy");
                 table.addCell("Farg'ona");
                 table.addCell("Toshkent moliya instituti");
+                table.addCell("Magistr");
+                table.addCell("Tashkent");
+                table.addCell("");
+
+
                 table.setHorizontalAlignment(200);
                 table.setTotalWidth(500);
                 PdfContentByte canvas = writer.getDirectContent();

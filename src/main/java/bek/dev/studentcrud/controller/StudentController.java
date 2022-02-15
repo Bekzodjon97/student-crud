@@ -1,5 +1,7 @@
 package bek.dev.studentcrud.controller;
 
+import bek.dev.studentcrud.ProducerService;
+import bek.dev.studentcrud.config.MQConfig;
 import bek.dev.studentcrud.entity.Student;
 import bek.dev.studentcrud.payload.Result;
 import bek.dev.studentcrud.service.StudentService;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotBlank;
@@ -32,7 +35,14 @@ import java.util.List;
 public class StudentController {
 
     private final StudentService studentService;
+    private final ProducerService producerService;
 
+
+    @GetMapping("/send-message")
+    public String sendMessage(){
+        producerService.sendMessage(MQConfig.FANOUT_EXCHANGE, "", "Student project send message");
+        return "Send message";
+    }
 
     @Operation(summary = "Get list of Students in the System ", tags = "Get Students")
     @ApiResponses(value = {
@@ -56,7 +66,7 @@ public class StudentController {
             @Parameter(description = "Last name of students")@RequestParam(value = "lastName", required = false)@NotBlank(message = "Lasstname not be empty") String lastName,
             @Parameter(description = "Birth date of students")@RequestParam(value = "birthDate", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)  LocalDate birthDate,
             @Parameter(description = "Group name of students")@RequestParam(value = "group", required = false)@NotBlank(message = "Group not be empty") String group,
-            MultipartHttpServletRequest request) throws IOException {
+            @Parameter(description = "Studets images")@RequestParam(name = "file") MultipartFile request) throws IOException {
         return studentService.createNewEmployee(firstName, lastName,birthDate, group,request);
     }
 
@@ -113,7 +123,7 @@ public class StudentController {
         studentService.downloadResumePdf(id, response);
     }
 
-    @GetMapping("/excell")
+    @GetMapping("/excel")
     @Operation(summary = "Download all student in excel format ", tags = "Download Excel")
     public void downloadAllStudentsExcell(HttpServletResponse response) throws IOException {
         studentService.downloadAllStudentsExcel(response);

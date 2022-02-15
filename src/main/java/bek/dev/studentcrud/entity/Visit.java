@@ -39,4 +39,13 @@ public class Visit {
     @ApiModelProperty(notes = "Student of the Visit")
     private Student student;
 
+    @Override
+    public String toString() {
+        return "Visit{" +
+                "id=" + id +
+                ", comeTime=" + comeTime +
+                ", backTime=" + backTime +
+                ", student=" + student +
+                '}';
+    }
 }
